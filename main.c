@@ -23,6 +23,26 @@ int main() {
     // Number of rounds = number of players
     int numRounds = numPlayers;
 
+    // Creating a thread for each player
+    pid_t pids[numPlayers];
+
+    for (int i = 0; i < numPlayers; i++){
+        pid_t pid = fork();
+
+        if (pid < 0) {
+            printf("Error creating player %d\n", i);
+            exit(1);
+        }
+        // This is a new player/child process
+        if (pid == 0) {
+            printf("Player %d created\n", i);
+
+            // TODO: Handle player actions
+
+            exit(0); // Exit child process once it's done
+        }
+    }
+
     // In each round:
     // One player is dealer:
         // Shuffle cards
