@@ -1,0 +1,13 @@
+Game started with seed 3, 3 players, and 3 chips in bag.
+Player 0 is starting their thread.
+Player 1 is starting their thread.
+Player 2 is starting their thread.
+Player 0 is the dealer for round 0.
+Player 1 is a non-dealer for round 0.
+Player 2 is a non-dealer for round 0.
+Player 1 is the dealer for round 1.
+Player 0 is a non-dealer for round 1.
+Player 2 is a non-dealer for round 1.
+Player 2 is the dealer for round 2.
+Player 1 is a non-dealer for round 2.
+Player 0 is a non-dealer for round 2.

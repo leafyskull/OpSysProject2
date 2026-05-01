@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <stdlib.h>
-
+#include <stdarg.h>
 
 // This struct will hold info to be passed to each player thread.
 struct thread_args {
@@ -16,9 +16,39 @@ struct thread_args {
     int numRounds;
 };
 
+// Barriers for synchrinozing player actions
 pthread_barrier_t roundEndBarrier;
 pthread_barrier_t dealerEndBarrier;
 pthread_barrier_t playerCreationBarrier;
+
+// Log file for loggig player actions
+FILE *logFile;
+pthread_mutex_t logFileMutex;
+
+
+
+// writeToLog: Allows a process to write to the shared log file.
+void writeToLog(const char *format, ...){
+    pthread_mutex_lock(&logFileMutex);
+
+    va_list args;
+
+    // Print to console
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+
+    // Write to log file
+    va_start(args, format);
+    vfprintf(logFile, format, args);
+    va_end(args);
+
+    fflush(logFile);
+
+    pthread_mutex_unlock(&logFileMutex);
+}
+
+
 
 // playerThread: Logic for each player thread
 //
@@ -29,7 +59,7 @@ void *playerThread(void *newThreadArgs) {
     int playerID = newThreadData->playerID;
     int numRounds = newThreadData->numRounds;
 
-    printf("Player %d is starting their thread.\n", playerID);
+    writeToLog("Player %d is starting their thread.\n", playerID);
 
     // Wait for all players to be created before starting the game.
     pthread_barrier_wait(&playerCreationBarrier);
@@ -56,7 +86,7 @@ void *playerThread(void *newThreadArgs) {
         // DEALER ACTIONS
         if (playerID == round){
             // DO DEALER SETUP
-            printf("Player %d is the dealer for round %d.\n", playerID, round);
+            writeToLog("Player %d is the dealer for round %d.\n", playerID, round);
         }
 
         // Everyone waits for the dealer to finish their setup for the round.
@@ -65,13 +95,11 @@ void *playerThread(void *newThreadArgs) {
         // NON DEALER ACTIONS
         if (playerID != round){
             // DO NON-DEALER ACTIONS
-            printf("Player %d is a non-dealer for round %d.\n", playerID, round);
+            writeToLog("Player %d is a non-dealer for round %d.\n", playerID, round);
         }
 
         // END OF ROUND: Everyone waits for everyone to finish round.
-        pthread_barrier_wait(&roundEndBarrier);
-
-
+        pthread_barrier_wait(&roundEndBarrier); 
     }
     
 
@@ -92,15 +120,27 @@ int main() {
     printf("Input number of chips in bag: ");
     scanf("%d", &numChipsInBag);
 
+    // Initialize log file
+    logFile = fopen("gameLog.txt", "w");
+    if (logFile == NULL) {
+        printf("Error opening log file.\n");
+        return 1;
+    }
+    pthread_mutex_init(&logFileMutex, NULL);
+    writeToLog("Game started with seed %d, %d players, and %d chips in bag.\n", seed, numPlayers, numChipsInBag);
+    
+
     // Number of rounds = number of players
     int numRounds = numPlayers;
 
     pthread_t threads[numPlayers]; // Holds threads
     int playerIDs[numPlayers]; // Stores playerIDs (might remove later)
+    struct thread_args threadArgs[numPlayers]; // Struct to hold arguments for each thread (playerID, numRounds)
 
     // Initialize thread barriers for:
        // Dealer turn end
        // Round end
+       // Player creation/joining game
     pthread_barrier_init(&roundEndBarrier, NULL, numPlayers);
     pthread_barrier_init(&dealerEndBarrier, NULL, numPlayers);
     pthread_barrier_init(&playerCreationBarrier, NULL, numPlayers);
@@ -110,14 +150,15 @@ int main() {
         playerIDs[t] = t;
 
         printf("Creating thread for player %d.\n", t);
-        struct thread_args newThread = { .playerID = t, .numRounds = numRounds };
+        threadArgs[t].playerID = t;
+        threadArgs[t].numRounds = numRounds;
 
         // Create thread for player
         // NOTE TO SELF: &threads[t]: address of thread for player t.
         // NOTE TO SELF: NULL: default thread attributes.
         // NOTE TO SELF: playerThread: function to run in thread.
         // NOTE TO SELF: (void *)&newThread: argument to pass to playerThread.
-        if (pthread_create(&threads[t], NULL, playerThread, (void *)&newThread) != 0) {
+        if (pthread_create(&threads[t], NULL, playerThread, (void *)&threadArgs[t]) != 0) {
             printf("Error creating thread for player %d\n", t);
             return 1;
         }
