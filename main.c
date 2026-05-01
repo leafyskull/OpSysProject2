@@ -1,6 +1,6 @@
 // File: main.c
 // Author: Danny Holt
-// This file contains the main function for the "Greasy cards" game.
+// This file contains everything necessary for the "Greasy Cards" game.
 
 #define _POSIX_C_SOURCE 200809L // Might remove
 #include <stdio.h>
@@ -27,13 +27,22 @@ typedef struct {
     int topIndex;
 } Deck;
 
+// Hand struct to represent a player's hand of cards.
+typedef struct {
+    Card handCards[DECK_SIZE];
+    int topIndex;
+} Hand;
+
 // GameState struct to track state of game.
 typedef struct{
     Deck deck;
+    Hand playerHands[DECK_SIZE]; // Only indicies 0 to numPlayers-1 will be used.
+                                 // Index "n" represents the hand of player "n".
 
     pthread_mutex_t deckMutex;
     pthread_mutex_t rngMutex;
 
+    int numPlayers;
     int seed;
 } GameState;
 
@@ -41,6 +50,7 @@ typedef struct{
 struct thread_args {
     int playerID;
     int numRounds;
+    GameState *gameState;
 };
 
 // Barriers for synchrinozing player actions
@@ -75,10 +85,34 @@ void writeToLog(const char *format, ...){
     pthread_mutex_unlock(&logFileMutex);
 }
 
+// initGameState: Initializes the GameState and deck.
+//
+// *gameState: Pointer to the GameState.
+// seed: Seed for RNG.
+void initGameState(GameState *gameState, int seed, int numPlayers) {
+
+    printf("Initializing GameState...\n");
+
+    // Initialize deck and mutexes, set RNG seed
+    initDeck(&gameState->deck);
+    pthread_mutex_init(&gameState->deckMutex, NULL);
+    pthread_mutex_init(&gameState->rngMutex, NULL);
+    gameState->seed = seed;
+    gameState->numPlayers = numPlayers;
+
+    // Initialize player hands to be empty
+    for (int i = 0; i < DECK_SIZE; i++) {
+        gameState->playerHands[i] = (Hand){0};
+    }
+}
+
 // initDeck: This will initialize the deck of cards for the game.
 //
 // *deck: Pointer to the deck to be initialized.
 void initDeck(Deck *deck) {
+
+    printf("Initializing deck...\n");
+
     int index = 0;
     for (int suit = 0; suit < NUM_SUITS; suit++) {
         for (int rank = 1; rank <= NUM_RANKS; rank++) {
@@ -95,6 +129,9 @@ void initDeck(Deck *deck) {
 //
 // *gameState: Pointer to the gameState.
 void shuffleDeck(GameState *gameState) {
+
+    printf("Shuffling deck...\n");
+
     pthread_mutex_lock(&gameState->deckMutex);
 
     for (int i = 0; i < DECK_SIZE; i++) {
@@ -104,7 +141,34 @@ void shuffleDeck(GameState *gameState) {
         gameState->deck.cards[j] = temp;
     }
 
+    gameState->deck.topIndex = 0;
+
     pthread_mutex_unlock(&gameState->deckMutex);
+}
+
+// drawCard: Will draw the top card from the deck
+//
+// *gameState: Pointer to the gameState.
+Card drawCard(GameState *gameState) {
+    pthread_mutex_lock(&gameState->deckMutex);
+
+    Card drawnCard = gameState->deck.cards[gameState->deck.topIndex];
+    gameState->deck.topIndex++;
+
+    pthread_mutex_unlock(&gameState->deckMutex);
+
+    return drawnCard;
+}
+
+// addCardToHand: Adds a card to a player's hand.
+//
+// *gameState: Pointer to the GameState
+// playerID: ID of the player who is recieving the card
+// card: The card to be recieved.
+void addCardToHand(GameState *gameState, int playerID, Card card) {
+    Hand *hand = &gameState->playerHands[playerID];
+    hand->topIndex++;
+    hand->handCards[hand->topIndex] = card;
 }
 
 // getRandomInt: Returns a random int.
@@ -123,7 +187,32 @@ int getRandomInt(GameState *gameState, int min, int max) {
     return randomResult;
 }
 
+// ********** PLAYER ACTIONS **********
 
+void doDealerActions(int playerID, GameState *gameState) {
+    // If they're the dealer:
+        // Shuffle cards
+        // Choose random card (Greasy card)
+        // Deal single card to each player
+        // Open first bag of potato chips
+        // Wait for round to end
+    
+    // Shuffle cards, choose random card as greasy card
+    shuffleDeck(gameState);
+    Card greasyCard = drawCard(gameState);
+    writeToLog("Player %d (dealer) has chosen the greasy card: value %d, suit %d.\n", playerID, greasyCard.value, greasyCard.suit);
+
+    // Deal single card to each player
+    for (int i = 0; i < gameState->numPlayers; i++) {
+        Card dealtCard = drawCard(gameState);
+        addCardToHand(gameState, i, dealtCard);
+        writeToLog("Player %d has been dealt card: value %d, suit %d.\n", i, dealtCard.value, dealtCard.suit);
+    }
+
+    // Open first bag of potato chips
+    // Wait for round to end
+
+}
 
 // playerThread: Logic for each player thread
 //
@@ -139,13 +228,6 @@ void *playerThread(void *newThreadArgs) {
     // Wait for all players to be created before starting the game.
     pthread_barrier_wait(&playerCreationBarrier);
 
-    // What does each player do?
-    // If they're the dealer:
-        // Shuffle cards
-        // Choose random card (Greasy card)
-        // Deal single card to each player
-        // Open first bag of potato chips
-        // Wait for round to end
 
     // If they're not the dealer:
         // Draw card from deack and compare to "greasy card"
@@ -182,9 +264,10 @@ void *playerThread(void *newThreadArgs) {
     return NULL;
 }
 
-int main() {
 
-    GameState gameState;
+// ********** MAIN FUNCTION **********
+
+int main() {
 
     int seed;
     int numPlayers;
@@ -197,7 +280,15 @@ int main() {
     printf("Input number of chips in bag: ");
     scanf("%d", &numChipsInBag);
 
-    srand(seed);
+    // Validate input
+    if (seed == NULL || numPlayers <= 0 || numChipsInBag <= 0) {
+        printf("Invalid input. Please enter valid seed, number of players, and number of chips in bag.\n");
+        return 1;
+    }
+    
+    // Initialize GameState
+    GameState gameState;
+    initGameState(&gameState, seed, numPlayers);
 
     // Initialize log file
     logFile = fopen("gameLog.txt", "w");
@@ -207,7 +298,6 @@ int main() {
     }
     pthread_mutex_init(&logFileMutex, NULL);
     writeToLog("Game started with seed %d, %d players, and %d chips in bag.\n", seed, numPlayers, numChipsInBag);
-    
 
     // Number of rounds = number of players
     int numRounds = numPlayers;
@@ -231,6 +321,7 @@ int main() {
         printf("Creating thread for player %d.\n", t);
         threadArgs[t].playerID = t;
         threadArgs[t].numRounds = numRounds;
+        threadArgs[t].gameState = &gameState;
 
         // Create thread for player
         // NOTE TO SELF: &threads[t]: address of thread for player t.
