@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 // CARD INFO
 #define NUM_SUITS 4
@@ -25,6 +26,7 @@ typedef struct {
 typedef struct {
     Card cards[DECK_SIZE];
     int topIndex;
+    int bottomIndex;
 } Deck;
 
 // Hand struct to represent a player's hand of cards.
@@ -38,13 +40,20 @@ typedef struct{
     Deck deck;
     Hand playerHands[DECK_SIZE]; // Only indicies 0 to numPlayers-1 will be used.
                                  // Index "n" represents the hand of player "n".
+    Card greasyCard;
 
     pthread_mutex_t deckMutex;
     pthread_mutex_t rngMutex;
+    pthread_mutex_t chipBagMutex;
 
+    int numChipsInBag;
     int numPlayers;
     int seed;
 } GameState;
+
+typedef struct{
+    int numChipsInBag;
+} BagOfChips;
 
 // This struct will hold info to be passed to each player thread.
 struct thread_args {
@@ -89,7 +98,7 @@ void writeToLog(const char *format, ...){
 //
 // *gameState: Pointer to the GameState.
 // seed: Seed for RNG.
-void initGameState(GameState *gameState, int seed, int numPlayers) {
+void initGameState(GameState *gameState, int seed, int numPlayers, int numChipInBag) {
 
     printf("Initializing GameState...\n");
 
@@ -97,14 +106,50 @@ void initGameState(GameState *gameState, int seed, int numPlayers) {
     initDeck(&gameState->deck);
     pthread_mutex_init(&gameState->deckMutex, NULL);
     pthread_mutex_init(&gameState->rngMutex, NULL);
+    pthread_mutex_init(&gameState->chipBagMutex, NULL);
     gameState->seed = seed;
     gameState->numPlayers = numPlayers;
+    gameState->numChipsInBag = numChipInBag;
 
     // Initialize player hands to be empty
     for (int i = 0; i < DECK_SIZE; i++) {
         gameState->playerHands[i] = (Hand){0};
     }
 }
+
+// ********** CHIPS FUNCTIONS **********
+
+void initBagOfChips(BagOfChips *bag, int numChipsInBag) {
+    bag->numChipsInBag = numChipsInBag;
+}
+
+// eatChips: Eats a number of chips out of the current bag, and opens a new one if needed.
+//
+// *gameState: Pointer to the GameState.
+// *bag: Pointer to the current bag of chips.
+// playerID: ID of the player eating the chips.
+void eatChips(GameState *gameState, BagOfChips *bag, int playerID) {
+    
+    pthread_mutex_lock(&gameState->rngMutex);
+    int chipsToEat = getRandomInt(gameState, 1, 5);
+    pthread_mutex_unlock(&gameState->rngMutex);
+
+    pthread_mutex_lock(&gameState->chipBagMutex);
+    
+    int overflow = chipsToEat - bag->numChipsInBag;
+    if (overflow > 0) {
+        writeToLog("Player %d wants to eat %d chips, but only %d are left in the bag. They eat the remaining chips and open a new bag.\n", playerID, chipsToEat, bag->numChipsInBag);
+        bag->numChipsInBag = gameState->numChipsInBag; // Finish current bag, open new bag
+        bag->numChipsInBag -= overflow; // Eat remaining chips from new bag
+    }
+    else{
+        bag->numChipsInBag -= chipsToEat;
+    }
+
+    pthread_mutex_unlock(&gameState->chipBagMutex);
+}
+
+// ********** DECK AND CARD FUNCTIONS **********
 
 // initDeck: This will initialize the deck of cards for the game.
 //
@@ -123,6 +168,7 @@ void initDeck(Deck *deck) {
     }
 
     deck->topIndex = 0;
+    deck->bottomIndex = DECK_SIZE - 1;
 }
 
 // shuffleDeck: This will shuffle the deck of cards for the game.
@@ -153,11 +199,22 @@ Card drawCard(GameState *gameState) {
     pthread_mutex_lock(&gameState->deckMutex);
 
     Card drawnCard = gameState->deck.cards[gameState->deck.topIndex];
-    gameState->deck.topIndex++;
+    gameState->deck.topIndex = (gameState->deck.topIndex + 1) % DECK_SIZE;
 
     pthread_mutex_unlock(&gameState->deckMutex);
-
     return drawnCard;
+}
+
+// returnCardToEndOfDeck: Returns a card to the end/bottom of the deck.
+// *gameState: Pointer to the gameState.
+// card: The card to be returned to the end of the deck.
+void returnCardToEndOfDeck(GameState *gameState, Card card) {
+    pthread_mutex_lock(&gameState->deckMutex);
+
+    gameState->deck.bottomIndex = (gameState->deck.bottomIndex + 1) % DECK_SIZE;
+    gameState->deck.cards[gameState->deck.bottomIndex] = card;
+
+    pthread_mutex_unlock(&gameState->deckMutex);
 }
 
 // addCardToHand: Adds a card to a player's hand.
@@ -170,6 +227,27 @@ void addCardToHand(GameState *gameState, int playerID, Card card) {
     hand->topIndex++;
     hand->handCards[hand->topIndex] = card;
 }
+
+// setGreasyCard: Sets the greasy card for the round.
+//
+// *gameState: Pointer to the GameState
+// card: The card to be set as the greasy card.
+void setGreasyCard(GameState *gameState, Card card) {
+    gameState->greasyCard = card;
+}
+
+// areCardsSameValue: Checks if two cards have the same value.
+// This will be used for players comparing their hand to the greasy card.
+//
+// Card1: First card to compare.
+// Card2: Second card to compare.
+//
+// Returns true if both cards have the same value, false otherwise.
+bool areCardsSameValue(Card card1, Card card2) {
+    return card1.value == card2.value;
+}
+
+// ********** RANDOM NUMBER GENERATION **********
 
 // getRandomInt: Returns a random int.
 // Used for shuffling deck, discarding cards, and eating chips.
@@ -214,6 +292,43 @@ void doDealerActions(int playerID, GameState *gameState) {
 
 }
 
+void doNonDealerActions(int playerID, GameState *gameState) {
+    // If they're not the dealer:
+        // Draw card from deck
+        // See if any cards in hand match value of greasy card.
+        // If no cards in hand are greasy card (match value), discard one card at random (place at end of deck).
+        // If there is a match, player shows hand, declares self as winner, and round ends.
+
+    // Draw card, add to hand
+    Card drawnCard = drawCard(gameState);
+    addCardToHand(gameState, playerID, drawnCard);
+
+
+    // See if any cards in hand match greasy card
+    Hand *hand = &gameState->playerHands[playerID];
+    bool hasGreasyCard = false;
+    for (int i = 0; i < hand->topIndex; i++) {
+        if (areCardsSameValue(hand->handCards[i], gameState->greasyCard)) {
+            hasGreasyCard = true;
+            break;
+        }
+    }
+
+    // If they have a card matching the greasy card, they show their hand,
+    // declare themself as a winner, and the round ends.
+    if (hasGreasyCard) {
+        writeToLog("Player %d has a card matching the greasy card and wins the round! Their hand:\n", playerID);
+        for (int i = 0; i < hand->topIndex; i++) {
+            writeToLog("Card %d: value %d, suit %d\n", i, hand->handCards[i].value, hand->handCards[i].suit);
+        }
+    }
+    // If they don't have a card matching the greasy card, they discard a random card by
+    // placing it at the end of the deck.
+    else {
+
+    }
+}
+
 // playerThread: Logic for each player thread
 //
 // *arg: Pointer to the player's ID
@@ -229,11 +344,6 @@ void *playerThread(void *newThreadArgs) {
     pthread_barrier_wait(&playerCreationBarrier);
 
 
-    // If they're not the dealer:
-        // Draw card from deack and compare to "greasy card"
-        // If no cards in hand are greasy card (match value), discard one card at random (place at end of deck).
-        // If there is a match, player shows hand, declares self as winner, and round ends.
-
     // At the end of round "m", player "m" (dealer) will signal for next round to start.
     // -> game ends when all [numPlayers] rounds are completed
 
@@ -244,6 +354,7 @@ void *playerThread(void *newThreadArgs) {
         if (playerID == round){
             // DO DEALER SETUP
             writeToLog("Player %d is the dealer for round %d.\n", playerID, round);
+            doDealerActions(playerID, newThreadData->gameState);
         }
 
         // Everyone waits for the dealer to finish their setup for the round.
@@ -288,7 +399,7 @@ int main() {
     
     // Initialize GameState
     GameState gameState;
-    initGameState(&gameState, seed, numPlayers);
+    initGameState(&gameState, seed, numPlayers, numChipsInBag);
 
     // Initialize log file
     logFile = fopen("gameLog.txt", "w");
