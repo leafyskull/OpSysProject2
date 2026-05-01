@@ -16,6 +16,9 @@ struct thread_args {
     int numRounds;
 };
 
+pthread_barrier_t roundEndBarrier;
+pthread_barrier_t dealerEndBarrier;
+pthread_barrier_t playerCreationBarrier;
 
 // playerThread: Logic for each player thread
 //
@@ -26,8 +29,10 @@ void *playerThread(void *newThreadArgs) {
     int playerID = newThreadData->playerID;
     int numRounds = newThreadData->numRounds;
 
-    printf("Now in playerThread\n");
     printf("Player %d is starting their thread.\n", playerID);
+
+    // Wait for all players to be created before starting the game.
+    pthread_barrier_wait(&playerCreationBarrier);
 
     // What does each player do?
     // If they're the dealer:
@@ -44,6 +49,32 @@ void *playerThread(void *newThreadArgs) {
 
     // At the end of round "m", player "m" (dealer) will signal for next round to start.
     // -> game ends when all [numPlayers] rounds are completed
+
+
+    for (int round = 0; round < numRounds; round++){
+
+        // DEALER ACTIONS
+        if (playerID == round){
+            // DO DEALER SETUP
+            printf("Player %d is the dealer for round %d.\n", playerID, round);
+        }
+
+        // Everyone waits for the dealer to finish their setup for the round.
+        pthread_barrier_wait(&dealerEndBarrier);
+
+        // NON DEALER ACTIONS
+        if (playerID != round){
+            // DO NON-DEALER ACTIONS
+            printf("Player %d is a non-dealer for round %d.\n", playerID, round);
+        }
+
+        // END OF ROUND: Everyone waits for everyone to finish round.
+        pthread_barrier_wait(&roundEndBarrier);
+
+
+    }
+    
+
 
     return NULL;
 }
@@ -67,12 +98,25 @@ int main() {
     pthread_t threads[numPlayers]; // Holds threads
     int playerIDs[numPlayers]; // Stores playerIDs (might remove later)
 
+    // Initialize thread barriers for:
+       // Dealer turn end
+       // Round end
+    pthread_barrier_init(&roundEndBarrier, NULL, numPlayers);
+    pthread_barrier_init(&dealerEndBarrier, NULL, numPlayers);
+    pthread_barrier_init(&playerCreationBarrier, NULL, numPlayers);
+
     // Create a thread for each player, and let their logic play out
     for (int t = 0; t < numPlayers; t++){
         playerIDs[t] = t;
 
+        printf("Creating thread for player %d.\n", t);
         struct thread_args newThread = { .playerID = t, .numRounds = numRounds };
 
+        // Create thread for player
+        // NOTE TO SELF: &threads[t]: address of thread for player t.
+        // NOTE TO SELF: NULL: default thread attributes.
+        // NOTE TO SELF: playerThread: function to run in thread.
+        // NOTE TO SELF: (void *)&newThread: argument to pass to playerThread.
         if (pthread_create(&threads[t], NULL, playerThread, (void *)&newThread) != 0) {
             printf("Error creating thread for player %d\n", t);
             return 1;
