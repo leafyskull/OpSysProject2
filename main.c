@@ -1,11 +1,24 @@
 // File: main.c
 // Author: Danny Holt
 // This file contains the main function for the "Greasy cards" game.
-
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <pthread.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <stdlib.h>
 
 
+// playerThread: Logic for each player thread
+//
+// *arg: Pointer to the player's ID
+void *playerThread(void *arg) {
+    long playerID = *(int *)arg;
+    printf("Now in playerThread\n");
+    printf("Player %ld is starting their thread.\n", playerID);
+
+    return NULL;
+}
 
 int main() {
 
@@ -24,24 +37,26 @@ int main() {
     int numRounds = numPlayers;
 
     // Creating a thread for each player
-    pid_t pids[numPlayers];
+    pthread_t threads[numPlayers];
+    int playerIDs[numPlayers];
 
-    for (int i = 0; i < numPlayers; i++){
-        pid_t pid = fork();
+    for (int t = 0; t < numPlayers; t++){
+        playerIDs[t] = t;
 
-        if (pid < 0) {
-            printf("Error creating player %d\n", i);
-            exit(1);
-        }
-        // This is a new player/child process
-        if (pid == 0) {
-            printf("Player %d created\n", i);
-
-            // TODO: Handle player actions
-
-            exit(0); // Exit child process once it's done
+        if (pthread_create(&threads[t], NULL, playerThread, (void *)&playerIDs[t]) != 0) {
+            printf("Error creating thread for player %d\n", t);
+            return 1;
         }
     }
+
+    for (int i = 0; i < numPlayers; i++){
+        pthread_join(threads[i], NULL);
+    }
+
+    // The parent process should wait until all child processes/players are done before exiting
+    // for (int i = 0; i < numPlayers; i++) {
+    //     waitpid(pids[i], NULL, 0);
+    // }
 
     // In each round:
     // One player is dealer:
@@ -61,7 +76,7 @@ int main() {
 
 
 
-
-
+    printf("All player threads have finished.\n");
     return 0;
 }
+
