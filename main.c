@@ -10,6 +10,33 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+// CARD INFO
+#define NUM_SUITS 4
+#define NUM_RANKS 13
+#define DECK_SIZE 52
+
+// Card struct to represent a single card in the deck.
+typedef struct {
+    int value;
+    int suit;
+} Card;
+
+// Deck struct to represent the deck of cards for a game.
+typedef struct {
+    Card cards[DECK_SIZE];
+    int topIndex;
+} Deck;
+
+// GameState struct to track state of game.
+typedef struct{
+    Deck deck;
+
+    pthread_mutex_t deckMutex;
+    pthread_mutex_t rngMutex;
+
+    int seed;
+} GameState;
+
 // This struct will hold info to be passed to each player thread.
 struct thread_args {
     int playerID;
@@ -46,6 +73,54 @@ void writeToLog(const char *format, ...){
     fflush(logFile);
 
     pthread_mutex_unlock(&logFileMutex);
+}
+
+// initDeck: This will initialize the deck of cards for the game.
+//
+// *deck: Pointer to the deck to be initialized.
+void initDeck(Deck *deck) {
+    int index = 0;
+    for (int suit = 0; suit < NUM_SUITS; suit++) {
+        for (int rank = 1; rank <= NUM_RANKS; rank++) {
+            deck->cards[index].value = rank;
+            deck->cards[index].suit = suit;
+            index++;
+        }
+    }
+
+    deck->topIndex = 0;
+}
+
+// shuffleDeck: This will shuffle the deck of cards for the game.
+//
+// *gameState: Pointer to the gameState.
+void shuffleDeck(GameState *gameState) {
+    pthread_mutex_lock(&gameState->deckMutex);
+
+    for (int i = 0; i < DECK_SIZE; i++) {
+        int j = getRandomInt(gameState, i, DECK_SIZE - 1);
+        Card temp = gameState->deck.cards[i];
+        gameState->deck.cards[i] = gameState->deck.cards[j];
+        gameState->deck.cards[j] = temp;
+    }
+
+    pthread_mutex_unlock(&gameState->deckMutex);
+}
+
+// getRandomInt: Returns a random int.
+// Used for shuffling deck, discarding cards, and eating chips.
+//
+// *gameState: Pointer to the game state, used for accessing RNG seed and mutex.
+// min: Minimum value for random int (inclusive).
+// max: Maximum value for random int (inclusive).
+int getRandomInt(GameState *gameState, int min, int max) {
+    pthread_mutex_locK(&gameState->rngMutex);
+
+    int randomResult = min + rand_r(&gameState->seed) % (max - min + 1);
+
+    pthread_mutex_unlock(&gameState->rngMutex);
+
+    return randomResult;
 }
 
 
@@ -109,6 +184,8 @@ void *playerThread(void *newThreadArgs) {
 
 int main() {
 
+    GameState gameState;
+
     int seed;
     int numPlayers;
     int numChipsInBag;
@@ -119,6 +196,8 @@ int main() {
     scanf("%d", &numPlayers);
     printf("Input number of chips in bag: ");
     scanf("%d", &numChipsInBag);
+
+    srand(seed);
 
     // Initialize log file
     logFile = fopen("gameLog.txt", "w");
@@ -174,8 +253,6 @@ int main() {
     // Players eat random number of chips bt [1,5] after playing, before next turn
     // -> Only one player can grab chips at a time
     // When a player finds there's no chips left, they open a new bag.
-
-    // Each round (non-dealers):
 
 
 
