@@ -49,6 +49,8 @@ typedef struct{
     int numChipsInBag;
     int numPlayers;
     int seed;
+
+    BagOfChips chipBag
 } GameState;
 
 typedef struct{
@@ -98,7 +100,7 @@ void writeToLog(const char *format, ...){
 //
 // *gameState: Pointer to the GameState.
 // seed: Seed for RNG.
-void initGameState(GameState *gameState, int seed, int numPlayers, int numChipInBag) {
+void initGameState(GameState *gameState, int seed, int numPlayers, int numChipsInBag) {
 
     printf("Initializing GameState...\n");
 
@@ -109,7 +111,8 @@ void initGameState(GameState *gameState, int seed, int numPlayers, int numChipIn
     pthread_mutex_init(&gameState->chipBagMutex, NULL);
     gameState->seed = seed;
     gameState->numPlayers = numPlayers;
-    gameState->numChipsInBag = numChipInBag;
+
+    gameState->numChipsInBag = numChipsInBag;
 
     // Initialize player hands to be empty
     for (int i = 0; i < DECK_SIZE; i++) {
@@ -288,6 +291,9 @@ void doDealerActions(int playerID, GameState *gameState) {
     }
 
     // Open first bag of potato chips
+    writeToLog("Player %d (dealer) is opening the first bag of chips for this round with %d chips.\n", playerID, gameState->numChipsInBag);
+    initBagOfChips(&gameState->chipBag, gameState->numChipsInBag);
+
     // Wait for round to end
 
 }
@@ -325,7 +331,12 @@ void doNonDealerActions(int playerID, GameState *gameState) {
     // If they don't have a card matching the greasy card, they discard a random card by
     // placing it at the end of the deck.
     else {
+        ptread_mutex_lock(&gameState->rngMutex);
+        int cardToDiscardIndex = getRandomInt(gameState, 0, hand->topIndex - 1);
+        pthread_mutex_unlock(&gameState->rngMutex);
 
+        Card cardToDiscard = hand->handCards[cardToDiscardIndex];
+        returnCardToEndOfDeck(gameState, cardToDiscard);
     }
 }
 
@@ -364,6 +375,7 @@ void *playerThread(void *newThreadArgs) {
         if (playerID != round){
             // DO NON-DEALER ACTIONS
             writeToLog("Player %d is a non-dealer for round %d.\n", playerID, round);
+            doNonDealerActions(playerID, newThreadData->gameState);
         }
 
         // END OF ROUND: Everyone waits for everyone to finish round.
