@@ -65,11 +65,11 @@ typedef struct{
 } GameState;
 
 // This struct will hold info to be passed to each player thread.
-struct thread_args {
+typedef struct {
     int playerID;
     int numRounds;
     GameState *gameState;
-};
+} threadArgs;
 
 // ********** FUNCTION PROTOTYPES **********
 
@@ -91,6 +91,7 @@ void returnCardToEndOfDeck(GameState *gameState, Card card);
 void addCardToHand(GameState *gameState, int playerID, Card card);
 void setGreasyCard(GameState *gameState, Card card);
 bool areCardsSameValue(Card card1, Card card2);
+void clearHands(GameState *gameState);
 
 // Random
 int getRandomInt(GameState *gameState, int min, int max);
@@ -187,6 +188,15 @@ void setRoundWinner(GameState *gameState) {
     pthread_mutex_unlock(&gameState->winnerMutex);
 }
 
+// clearRoundWinner: Clears the round winner for the next round.
+//
+// *gameState: Pointer to the GameState.
+void clearRoundWinner(GameState *gameState) {
+    pthread_mutex_lock(&gameState->winnerMutex);
+    gameState->hasRoundWinner = false;
+    pthread_mutex_unlock(&gameState->winnerMutex);
+}
+
 
 
 // ********** CHIPS FUNCTIONS **********
@@ -217,31 +227,19 @@ void eatChips(GameState *gameState, BagOfChips *bag, int playerID) {
 
         if (chipsToEat <= bag->numChipsInBag)
         {
+            writeToLog("Player %d eats %d chips from the bag.\n", playerID, chipsToEat);
             bag->numChipsInBag -= chipsToEat;
             chipsToEat = 0;
         }
         else
         {
+            writeToLog("Player %d wants to eat %d chips, but only %d are left in the bag. They eat the remaining chips and open a new bag.\n", playerID, chipsToEat, bag->numChipsInBag);
             chipsToEat -= bag->numChipsInBag;
             bag->numChipsInBag = 0;
         }
     }
 
     pthread_mutex_unlock(&gameState->chipBagMutex);
-
-
-    // int overflow = chipsToEat - bag->numChipsInBag;
-    // if (overflow > 0) {
-    //     writeToLog("Player %d wants to eat %d chips, but only %d are left in the bag. They eat the remaining chips and open a new bag.\n", playerID, chipsToEat, bag->numChipsInBag);
-    //     bag->numChipsInBag = gameState->numChipsInBag; // Finish current bag, open new bag
-    //     bag->numChipsInBag -= overflow; // Eat remaining chips from new bag
-    // }
-    // else{
-    //     writeToLog("Player %d eats %d chips from the bag.\n", playerID, chipsToEat);
-    //     bag->numChipsInBag -= chipsToEat;
-    // }
-
-    // pthread_mutex_unlock(&gameState->chipBagMutex);
 }
 
 
@@ -325,6 +323,12 @@ void addCardToHand(GameState *gameState, int playerID, Card card) {
     hand->topIndex++;
 }
 
+void clearHands(GameState *gameState) {
+    for (int i = 0; i < gameState->numPlayers; i++) {
+        gameState->playerHands[i].topIndex = 0;
+    }
+}
+
 // setGreasyCard: Sets the greasy card for the round.
 //
 // *gameState: Pointer to the GameState
@@ -373,24 +377,24 @@ int getRandomInt(GameState *gameState, int min, int max) {
 // playerID: ID of the player who is the dealer.
 // *gameState: Pointer to the game state.
 void doDealerActions(int playerID, GameState *gameState) {
-    // If they're the dealer:
-        // Shuffle cards
-        // Choose random card (Greasy card)
-        // Deal single card to each player
-        // Open first bag of potato chips
-        // Wait for round to end
-    
+
+    // Clear player hands for next round
+    clearHands(gameState);
+
     // Shuffle cards, choose random card as greasy card
+    initDeck(&gameState->deck); 
     shuffleDeck(gameState);
     Card greasyCard = drawCard(gameState);
     setGreasyCard(gameState, greasyCard);
     writeToLog("Player %d (dealer) has chosen the greasy card: value %d, suit %d.\n", playerID, greasyCard.value, greasyCard.suit);
 
-    // Deal single card to each player
+    // Deal single card to each non-dealer player
     for (int i = 0; i < gameState->numPlayers; i++) {
-        Card dealtCard = drawCard(gameState);
-        addCardToHand(gameState, i, dealtCard);
-        writeToLog("Player %d has been dealt card: value %d, suit %d.\n", i, dealtCard.value, dealtCard.suit);
+        if (i != playerID) {
+            Card dealtCard = drawCard(gameState);
+            addCardToHand(gameState, i, dealtCard);
+            writeToLog("Player %d has been dealt card: value %d, suit %d.\n", i, dealtCard.value, dealtCard.suit);
+        }
     }
 
     // Open first bag of potato chips
@@ -407,6 +411,7 @@ void doNonDealerActions(int playerID, GameState *gameState) {
     // Draw card, add to hand
     Card drawnCard = drawCard(gameState);
     addCardToHand(gameState, playerID, drawnCard);
+    writeToLog("Player %d has drawn card: value %d, suit %d.\n", playerID, drawnCard.value, drawnCard.suit);
 
     // See if any cards in hand match greasy card
     Hand *hand = &gameState->playerHands[playerID];
@@ -421,10 +426,10 @@ void doNonDealerActions(int playerID, GameState *gameState) {
     // If they have a card matching the greasy card, they show their hand,
     // declare themself as a winner, and the round ends.
     if (hasGreasyCard) {
+        setRoundWinner(gameState);
         writeToLog("Player %d has a card matching the greasy card and wins the round! Their hand:\n", playerID);
         for (int i = 0; i < hand->topIndex; i++) {
             writeToLog("Card %d: value %d, suit %d\n", i, hand->handCards[i].value, hand->handCards[i].suit);
-            setRoundWinner(gameState);
         }
     }
     // If they don't have a card matching the greasy card, they discard a random card by
@@ -439,6 +444,7 @@ void doNonDealerActions(int playerID, GameState *gameState) {
         
         hand->topIndex--;
         returnCardToEndOfDeck(gameState, cardToDiscard);
+        printf("Player %d discarded card with value %d and suite %d", playerID, cardToDiscard.value, cardToDiscard.suit);
     }
 
     // Eat a random number of chips
@@ -450,7 +456,7 @@ void doNonDealerActions(int playerID, GameState *gameState) {
 // *arg: Pointer to the player's ID
 void *playerThread(void *newThreadArgs) {
 
-    struct thread_args *newThreadData = (struct thread_args *)newThreadArgs;
+    threadArgs *newThreadData = (threadArgs *)newThreadArgs;
     int playerID = newThreadData->playerID;
     int numRounds = newThreadData->numRounds;
 
@@ -459,15 +465,11 @@ void *playerThread(void *newThreadArgs) {
     // Wait for all players to be created before starting the game.
     pthread_barrier_wait(&playerCreationBarrier);
 
-
-    // At the end of round "m", player "m" (dealer) will signal for next round to start.
-    // -> game ends when all [numPlayers] rounds are completed
-
-
     for (int round = 0; round < numRounds; round++){
-
+        
         // DEALER ACTIONS: Once at start of round
         if (playerID == round){
+            clearRoundWinner(newThreadData->gameState);
             writeToLog("Player %d is the dealer for round %d.\n", playerID, round);
             doDealerActions(playerID, newThreadData->gameState);
         }
@@ -476,13 +478,29 @@ void *playerThread(void *newThreadArgs) {
         pthread_barrier_wait(&dealerEndBarrier);
 
         // NON DEALER ACTIONS: Repeat until winner is found for round.
+        // NOTE: Ensuring that players play in numerical order, starting with ID after
+        // dealer's value, and looping back around.
         while (!hasRoundWinner(newThreadData->gameState)) {
-            if (playerID != round){
-                writeToLog("Player %d is a non-dealer for round %d.\n", playerID, round);
-                doNonDealerActions(playerID, newThreadData->gameState);
+            for (int offset = 1; offset < newThreadData->gameState->numPlayers; offset++) {
+
+                int currentPlayer = (round + offset) % newThreadData->gameState->numPlayers;
+
+                // Only the current player takes a turn
+                if (!hasRoundWinner(newThreadData->gameState) && playerID == currentPlayer) {
+                    writeToLog("Player %d's turn in round %d.\n", playerID, round);
+                    doNonDealerActions(playerID, newThreadData->gameState);
+                }
+
+                // Everyone waits so turns happen one at a time
+                pthread_barrier_wait(&roundEndBarrier);
             }
 
-            pthread_barrier_wait(&roundEndBarrier);
+            // if (playerID != round){
+            //     writeToLog("Player %d's turn in round %d.\n", playerID, round);
+            //     doNonDealerActions(playerID, newThreadData->gameState);
+            // }
+
+            // pthread_barrier_wait(&roundEndBarrier);
         }
 
         // END OF ROUND: Everyone waits for everyone to finish round,
@@ -537,7 +555,7 @@ int main() {
     int numRounds = numPlayers;
 
     pthread_t threads[numPlayers]; // Holds threads
-    struct thread_args threadArgs[numPlayers]; // Struct to hold arguments for each thread (playerID, numRounds)
+    threadArgs threadArgs[numPlayers]; // Struct to hold arguments for each thread
 
     // Initialize thread barriers for:
        // Dealer turn end
