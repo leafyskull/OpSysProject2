@@ -1,5 +1,9 @@
 # OpSysProject2
 
+Author: Danny Holt (kid24@txstate.edu)  
+Date: May 1, 2026  
+This is the report for my Project 2 submission.  
+
 # To compile and run:  
 Enter "gcc main.c -o main -pthread" into your console to compile  
 Enter "./main" into your console to run the .exe  
