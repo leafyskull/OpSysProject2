@@ -1,8 +1,9 @@
 // File: main.c
 // Author: Danny Holt
 // This file contains everything necessary for the "Greasy Cards" game.
+// This is my submission for the "Project #2" assignment.
 
-#define _POSIX_C_SOURCE 200809L // Might remove
+#define _POSIX_C_SOURCE 200809L // I'm not sure if this is really needed but it may be for some devices.
 #include <stdio.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -71,6 +72,8 @@ typedef struct {
     GameState *gameState;
 } threadArgs;
 
+
+
 // ********** FUNCTION PROTOTYPES **********
 
 // Logging
@@ -92,6 +95,8 @@ void addCardToHand(GameState *gameState, int playerID, Card card);
 void setGreasyCard(GameState *gameState, Card card);
 bool areCardsSameValue(Card card1, Card card2);
 void clearHands(GameState *gameState);
+char* intToRank(Card card);
+char* intToSuit(Card card);
 
 // Random
 int getRandomInt(GameState *gameState, int min, int max);
@@ -301,6 +306,7 @@ Card drawCard(GameState *gameState) {
 }
 
 // returnCardToEndOfDeck: Returns a card to the end/bottom of the deck.
+//
 // *gameState: Pointer to the gameState.
 // card: The card to be returned to the end of the deck.
 void returnCardToEndOfDeck(GameState *gameState, Card card) {
@@ -537,13 +543,6 @@ void *playerThread(void *newThreadArgs) {
                 // Everyone waits so turns happen one at a time
                 pthread_barrier_wait(&roundEndBarrier);
             }
-
-            // if (playerID != round){
-            //     writeToLog("Player %d's turn in round %d.\n", playerID, round);
-            //     doNonDealerActions(playerID, newThreadData->gameState);
-            // }
-
-            // pthread_barrier_wait(&roundEndBarrier);
         }
 
         // END OF ROUND: Everyone waits for everyone to finish round,
