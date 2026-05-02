@@ -1,169 +1,204 @@
 Game started with seed 4, 4 players, and 4 chips in bag.
-Player 0 is starting their thread.
-Player 1 is starting their thread.
-Player 2 is starting their thread.
 Player 3 is starting their thread.
-Player 0 is the dealer for round 0.
-Player 0 (dealer) has chosen the greasy card: value 3, suit 3.
-Player 1 has been dealt card: value 7, suit 0.
-Player 2 has been dealt card: value 11, suit 2.
-Player 3 has been dealt card: value 5, suit 3.
+Player 0 is starting their thread.
+Player 2 is starting their thread.
+Player 1 is starting their thread.
+
+*** New round ***
+Player 0 (dealer) shuffling deck...
+Player 0 (dealer) has chosen the greasy card: Three of Spades.
+Player 1 has been dealt card: Seven of Hearts.
+Player 2 has been dealt card: Jack of Clubs.
+Player 3 has been dealt card: Five of Spades.
 Player 0 (dealer) is opening the first bag of chips for this round with 4 chips.
 Player 1's turn in round 0.
-Player 1 has drawn card: value 9, suit 1.
+Player 1 has drawn card: Nine of Diamonds.
+Player 1 discarded card: Nine of Diamonds
 Player 1 eats 3 chips from the bag.
 Player 2's turn in round 0.
-Player 2 has drawn card: value 6, suit 2.
-Player 2 wants to eat 3 chips, but only 1 are left in the bag. They eat the remaining chips and open a new bag.
+Player 2 has drawn card: Six of Clubs.
+Player 2 discarded card: Six of Clubs
+Player 2 wants to eat 3 chips, but only 1 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 2 opens a new bag of chips.
 Player 2 eats 2 chips from the bag.
 Player 3's turn in round 0.
-Player 3 has drawn card: value 5, suit 2.
-Player 3 wants to eat 3 chips, but only 2 are left in the bag. They eat the remaining chips and open a new bag.
+Player 3 has drawn card: Five of Clubs.
+Player 3 discarded card: Five of Clubs
+Player 3 wants to eat 3 chips, but only 2 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 3 opens a new bag of chips.
 Player 3 eats 1 chips from the bag.
 Player 1's turn in round 0.
-Player 1 has drawn card: value 13, suit 1.
+Player 1 has drawn card: King of Diamonds.
+Player 1 discarded card: Seven of Hearts
 Player 1 eats 1 chips from the bag.
 Player 2's turn in round 0.
-Player 2 has drawn card: value 4, suit 3.
+Player 2 has drawn card: Four of Spades.
+Player 2 discarded card: Jack of Clubs
 Player 2 eats 1 chips from the bag.
 Player 3's turn in round 0.
-Player 3 has drawn card: value 11, suit 3.
+Player 3 has drawn card: Jack of Spades.
+Player 3 discarded card: Five of Spades
 Player 3 eats 1 chips from the bag.
 Player 1's turn in round 0.
-Player 1 has drawn card: value 7, suit 3.
+Player 1 has drawn card: Seven of Spades.
+Player 1 discarded card: Seven of Spades
 Player 1 opens a new bag of chips.
-Player 1 wants to eat 5 chips, but only 4 are left in the bag. They eat the remaining chips and open a new bag.
+Player 1 wants to eat 5 chips, but only 4 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 1 opens a new bag of chips.
 Player 1 eats 1 chips from the bag.
 Player 2's turn in round 0.
-Player 2 has drawn card: value 2, suit 0.
-Player 2 wants to eat 5 chips, but only 3 are left in the bag. They eat the remaining chips and open a new bag.
+Player 2 has drawn card: Two of Hearts.
+Player 2 discarded card: Two of Hearts
+Player 2 wants to eat 5 chips, but only 3 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 2 opens a new bag of chips.
 Player 2 eats 2 chips from the bag.
 Player 3's turn in round 0.
-Player 3 has drawn card: value 1, suit 1.
-Player 3 wants to eat 5 chips, but only 2 are left in the bag. They eat the remaining chips and open a new bag.
+Player 3 has drawn card: Ace of Diamonds.
+Player 3 discarded card: Ace of Diamonds
+Player 3 wants to eat 5 chips, but only 2 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 3 opens a new bag of chips.
 Player 3 eats 3 chips from the bag.
 Player 1's turn in round 0.
-Player 1 has drawn card: value 6, suit 0.
-Player 1 wants to eat 4 chips, but only 1 are left in the bag. They eat the remaining chips and open a new bag.
+Player 1 has drawn card: Six of Hearts.
+Player 1 discarded card: King of Diamonds
+Player 1 wants to eat 4 chips, but only 1 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 1 opens a new bag of chips.
 Player 1 eats 3 chips from the bag.
 Player 2's turn in round 0.
-Player 2 has drawn card: value 7, suit 1.
-Player 2 wants to eat 4 chips, but only 1 are left in the bag. They eat the remaining chips and open a new bag.
+Player 2 has drawn card: Seven of Diamonds.
+Player 2 discarded card: Four of Spades
+Player 2 wants to eat 4 chips, but only 1 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 2 opens a new bag of chips.
 Player 2 eats 3 chips from the bag.
 Player 3's turn in round 0.
-Player 3 has drawn card: value 8, suit 0.
-Player 3 wants to eat 4 chips, but only 1 are left in the bag. They eat the remaining chips and open a new bag.
+Player 3 has drawn card: Eight of Hearts.
+Player 3 discarded card: Jack of Spades
+Player 3 wants to eat 4 chips, but only 1 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 3 opens a new bag of chips.
 Player 3 eats 3 chips from the bag.
 Player 1's turn in round 0.
-Player 1 has drawn card: value 11, suit 1.
-Player 1 wants to eat 5 chips, but only 1 are left in the bag. They eat the remaining chips and open a new bag.
+Player 1 has drawn card: Jack of Diamonds.
+Player 1 discarded card: Six of Hearts
+Player 1 wants to eat 5 chips, but only 1 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 1 opens a new bag of chips.
 Player 1 eats 4 chips from the bag.
 Player 2's turn in round 0.
-Player 2 has drawn card: value 12, suit 1.
+Player 2 has drawn card: Queen of Diamonds.
+Player 2 discarded card: Seven of Diamonds
 Player 2 opens a new bag of chips.
-Player 2 wants to eat 5 chips, but only 4 are left in the bag. They eat the remaining chips and open a new bag.
+Player 2 wants to eat 5 chips, but only 4 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 2 opens a new bag of chips.
 Player 2 eats 1 chips from the bag.
 Player 3's turn in round 0.
-Player 3 has drawn card: value 13, suit 3.
-Player 3 wants to eat 5 chips, but only 3 are left in the bag. They eat the remaining chips and open a new bag.
+Player 3 has drawn card: King of Spades.
+Player 3 discarded card: Eight of Hearts
+Player 3 wants to eat 5 chips, but only 3 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 3 opens a new bag of chips.
 Player 3 eats 2 chips from the bag.
 Player 1's turn in round 0.
-Player 1 has drawn card: value 4, suit 0.
+Player 1 has drawn card: Four of Hearts.
+Player 1 discarded card: Four of Hearts
 Player 1 eats 1 chips from the bag.
 Player 2's turn in round 0.
-Player 2 has drawn card: value 2, suit 2.
+Player 2 has drawn card: Two of Clubs.
+Player 2 discarded card: Two of Clubs
 Player 2 eats 1 chips from the bag.
 Player 3's turn in round 0.
-Player 3 has drawn card: value 5, suit 1.
+Player 3 has drawn card: Five of Diamonds.
+Player 3 discarded card: Five of Diamonds
 Player 3 opens a new bag of chips.
 Player 3 eats 1 chips from the bag.
 Player 1's turn in round 0.
-Player 1 has drawn card: value 5, suit 0.
+Player 1 has drawn card: Five of Hearts.
+Player 1 discarded card: Five of Hearts
 Player 1 eats 3 chips from the bag.
 Player 2's turn in round 0.
-Player 2 has drawn card: value 13, suit 0.
+Player 2 has drawn card: King of Hearts.
+Player 2 discarded card: King of Hearts
 Player 2 opens a new bag of chips.
 Player 2 eats 3 chips from the bag.
 Player 3's turn in round 0.
-Player 3 has drawn card: value 3, suit 0.
+Player 3 has drawn card: Three of Hearts.
 Player 3 has a card matching the greasy card and wins the round! Their hand:
-Card 0: value 13, suit 3
-Card 1: value 3, suit 0
-Player 3 wants to eat 2 chips, but only 1 are left in the bag. They eat the remaining chips and open a new bag.
+Card 0: King of Spades
+Card 1: Three of Hearts
+Player 3 wants to eat 2 chips, but only 1 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 3 opens a new bag of chips.
 Player 3 eats 1 chips from the bag.
 Player 0 (dealer) is signaling the end of round 0.
-Player 1 is the dealer for round 1.
-Player 1 (dealer) has chosen the greasy card: value 4, suit 2.
-Player 0 has been dealt card: value 8, suit 2.
-Player 2 has been dealt card: value 9, suit 3.
-Player 3 has been dealt card: value 13, suit 2.
+
+*** New round ***
+Player 1 (dealer) shuffling deck...
+Player 1 (dealer) has chosen the greasy card: Four of Clubs.
+Player 0 has been dealt card: Eight of Clubs.
+Player 2 has been dealt card: Nine of Spades.
+Player 3 has been dealt card: King of Clubs.
 Player 1 (dealer) is opening the first bag of chips for this round with 4 chips.
 Player 2's turn in round 1.
-Player 2 has drawn card: value 6, suit 2.
+Player 2 has drawn card: Six of Clubs.
+Player 2 discarded card: Six of Clubs
 Player 2 eats 2 chips from the bag.
 Player 3's turn in round 1.
-Player 3 has drawn card: value 11, suit 2.
+Player 3 has drawn card: Jack of Clubs.
+Player 3 discarded card: Jack of Clubs
 Player 3 eats 2 chips from the bag.
 Player 0's turn in round 1.
-Player 0 has drawn card: value 1, suit 1.
+Player 0 has drawn card: Ace of Diamonds.
+Player 0 discarded card: Eight of Clubs
 Player 0 opens a new bag of chips.
 Player 0 eats 3 chips from the bag.
 Player 2's turn in round 1.
-Player 2 has drawn card: value 5, suit 0.
-Player 2 wants to eat 3 chips, but only 1 are left in the bag. They eat the remaining chips and open a new bag.
+Player 2 has drawn card: Five of Hearts.
+Player 2 discarded card: Five of Hearts
+Player 2 wants to eat 3 chips, but only 1 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 2 opens a new bag of chips.
 Player 2 eats 2 chips from the bag.
 Player 3's turn in round 1.
-Player 3 has drawn card: value 4, suit 0.
+Player 3 has drawn card: Four of Hearts.
 Player 3 has a card matching the greasy card and wins the round! Their hand:
-Card 0: value 13, suit 2
-Card 1: value 4, suit 0
+Card 0: King of Clubs
+Card 1: Four of Hearts
 Player 3 eats 2 chips from the bag.
 Player 1 (dealer) is signaling the end of round 1.
-Player 2 is the dealer for round 2.
-Player 2 (dealer) has chosen the greasy card: value 5, suit 3.
-Player 0 has been dealt card: value 6, suit 2.
-Player 1 has been dealt card: value 1, suit 0.
-Player 3 has been dealt card: value 6, suit 0.
+
+*** New round ***
+Player 2 (dealer) shuffling deck...
+Player 2 (dealer) has chosen the greasy card: Five of Spades.
+Player 0 has been dealt card: Six of Clubs.
+Player 1 has been dealt card: Ace of Hearts.
+Player 3 has been dealt card: Six of Hearts.
 Player 2 (dealer) is opening the first bag of chips for this round with 4 chips.
 Player 3's turn in round 2.
-Player 3 has drawn card: value 6, suit 1.
+Player 3 has drawn card: Six of Diamonds.
+Player 3 discarded card: Six of Diamonds
 Player 3 eats 3 chips from the bag.
 Player 0's turn in round 2.
-Player 0 has drawn card: value 5, suit 1.
+Player 0 has drawn card: Five of Diamonds.
 Player 0 has a card matching the greasy card and wins the round! Their hand:
-Card 0: value 6, suit 2
-Card 1: value 5, suit 1
-Player 0 wants to eat 3 chips, but only 1 are left in the bag. They eat the remaining chips and open a new bag.
+Card 0: Six of Clubs
+Card 1: Five of Diamonds
+Player 0 wants to eat 3 chips, but only 1 are left in the bag. They eat the remaining chips and will open a new bag.
 Player 0 opens a new bag of chips.
 Player 0 eats 2 chips from the bag.
 Player 2 (dealer) is signaling the end of round 2.
-Player 3 is the dealer for round 3.
-Player 3 (dealer) has chosen the greasy card: value 5, suit 3.
-Player 0 has been dealt card: value 6, suit 2.
-Player 1 has been dealt card: value 1, suit 0.
-Player 2 has been dealt card: value 6, suit 0.
+
+*** New round ***
+Player 3 (dealer) shuffling deck...
+Player 3 (dealer) has chosen the greasy card: Five of Spades.
+Player 0 has been dealt card: Six of Clubs.
+Player 1 has been dealt card: Ace of Hearts.
+Player 2 has been dealt card: Six of Hearts.
 Player 3 (dealer) is opening the first bag of chips for this round with 4 chips.
 Player 0's turn in round 3.
-Player 0 has drawn card: value 6, suit 1.
+Player 0 has drawn card: Six of Diamonds.
+Player 0 discarded card: Six of Diamonds
 Player 0 eats 4 chips from the bag.
 Player 1's turn in round 3.
-Player 1 has drawn card: value 5, suit 1.
+Player 1 has drawn card: Five of Diamonds.
 Player 1 has a card matching the greasy card and wins the round! Their hand:
-Card 0: value 1, suit 0
-Card 1: value 5, suit 1
+Card 0: Ace of Hearts
+Card 1: Five of Diamonds
 Player 1 opens a new bag of chips.
 Player 1 eats 1 chips from the bag.
 Player 3 (dealer) is signaling the end of round 3.
+All player threads have finished. Game End!

@@ -233,7 +233,7 @@ void eatChips(GameState *gameState, BagOfChips *bag, int playerID) {
         }
         else
         {
-            writeToLog("Player %d wants to eat %d chips, but only %d are left in the bag. They eat the remaining chips and open a new bag.\n", playerID, chipsToEat, bag->numChipsInBag);
+            writeToLog("Player %d wants to eat %d chips, but only %d are left in the bag. They eat the remaining chips and will open a new bag.\n", playerID, chipsToEat, bag->numChipsInBag);
             chipsToEat -= bag->numChipsInBag;
             bag->numChipsInBag = 0;
         }
@@ -348,6 +348,45 @@ bool areCardsSameValue(Card card1, Card card2) {
     return card1.value == card2.value;
 }
 
+// intToRank: Converts card's value (int) to rank (string)
+// Used for printing/logging info about card.
+//
+// card: The card to be output.
+char* intToRank(Card card) {
+    int value = card.value;
+    switch (value) {
+        case 1: return "Ace";
+        case 2 : return "Two";
+        case 3: return "Three";
+        case 4: return "Four";
+        case 5: return "Five";
+        case 6: return "Six";
+        case 7: return "Seven";
+        case 8: return "Eight";
+        case 9: return "Nine";
+        case 10: return "Ten";
+        case 11: return "Jack";
+        case 12: return "Queen";
+        case 13: return "King";
+        default: return "Unknown";
+    }
+}
+
+// intToSuit(Card card): Converts card's suit (int) to suit (string)
+// Used for printing/logging info about card.
+//
+// card: The card to be output.
+char* intToSuit(Card card) {
+    int suit = card.suit;
+    switch (suit) {
+        case 0: return "Hearts";
+        case 1: return "Diamonds";
+        case 2: return "Clubs";
+        case 3: return "Spades";
+        default: return "Unknown";
+    }
+}
+
 
 
 // ********** RANDOM NUMBER GENERATION **********
@@ -378,22 +417,26 @@ int getRandomInt(GameState *gameState, int min, int max) {
 // *gameState: Pointer to the game state.
 void doDealerActions(int playerID, GameState *gameState) {
 
+    writeToLog("\n*** New round ***\n");
+
     // Clear player hands for next round
     clearHands(gameState);
 
     // Shuffle cards, choose random card as greasy card
+    writeToLog("Player %d (dealer) shuffling deck...\n", playerID);
     initDeck(&gameState->deck); 
     shuffleDeck(gameState);
+
     Card greasyCard = drawCard(gameState);
     setGreasyCard(gameState, greasyCard);
-    writeToLog("Player %d (dealer) has chosen the greasy card: value %d, suit %d.\n", playerID, greasyCard.value, greasyCard.suit);
+    writeToLog("Player %d (dealer) has chosen the greasy card: %s of %s.\n", playerID, intToRank(greasyCard), intToSuit(greasyCard));
 
     // Deal single card to each non-dealer player
     for (int i = 0; i < gameState->numPlayers; i++) {
         if (i != playerID) {
             Card dealtCard = drawCard(gameState);
             addCardToHand(gameState, i, dealtCard);
-            writeToLog("Player %d has been dealt card: value %d, suit %d.\n", i, dealtCard.value, dealtCard.suit);
+            writeToLog("Player %d has been dealt card: %s of %s.\n", i, intToRank(dealtCard), intToSuit(dealtCard));
         }
     }
 
@@ -411,7 +454,7 @@ void doNonDealerActions(int playerID, GameState *gameState) {
     // Draw card, add to hand
     Card drawnCard = drawCard(gameState);
     addCardToHand(gameState, playerID, drawnCard);
-    writeToLog("Player %d has drawn card: value %d, suit %d.\n", playerID, drawnCard.value, drawnCard.suit);
+    writeToLog("Player %d has drawn card: %s of %s.\n", playerID, intToRank(drawnCard), intToSuit(drawnCard));
 
     // See if any cards in hand match greasy card
     Hand *hand = &gameState->playerHands[playerID];
@@ -429,7 +472,7 @@ void doNonDealerActions(int playerID, GameState *gameState) {
         setRoundWinner(gameState);
         writeToLog("Player %d has a card matching the greasy card and wins the round! Their hand:\n", playerID);
         for (int i = 0; i < hand->topIndex; i++) {
-            writeToLog("Card %d: value %d, suit %d\n", i, hand->handCards[i].value, hand->handCards[i].suit);
+            writeToLog("Card %d: %s of %s\n", i, intToRank(hand->handCards[i]), intToSuit(hand->handCards[i]));
         }
     }
     // If they don't have a card matching the greasy card, they discard a random card by
@@ -444,7 +487,7 @@ void doNonDealerActions(int playerID, GameState *gameState) {
         
         hand->topIndex--;
         returnCardToEndOfDeck(gameState, cardToDiscard);
-        printf("Player %d discarded card with value %d and suite %d", playerID, cardToDiscard.value, cardToDiscard.suit);
+        writeToLog("Player %d discarded card: %s of %s\n", playerID, intToRank(cardToDiscard), intToSuit(cardToDiscard));
     }
 
     // Eat a random number of chips
@@ -470,7 +513,7 @@ void *playerThread(void *newThreadArgs) {
         // DEALER ACTIONS: Once at start of round
         if (playerID == round){
             clearRoundWinner(newThreadData->gameState);
-            writeToLog("Player %d is the dealer for round %d.\n", playerID, round);
+            // writeToLog("Player %d is the dealer for round %d.\n", playerID, round);
             doDealerActions(playerID, newThreadData->gameState);
         }
 
@@ -568,7 +611,7 @@ int main() {
     // Create a thread for each player, and let their logic play out
     for (int t = 0; t < numPlayers; t++){
 
-        printf("Creating thread for player %d.\n", t);
+        // printf("Creating thread for player %d.\n", t);
         threadArgs[t].playerID = t;
         threadArgs[t].numRounds = numRounds;
         threadArgs[t].gameState = &gameState;
@@ -589,7 +632,7 @@ int main() {
         pthread_join(threads[i], NULL);
     }
 
-    printf("All player threads have finished. Game End!\n");
+    writeToLog("All player threads have finished. Game End!\n");
 
     // Destroy barriers and mutexes, close log file
     pthread_barrier_destroy(&roundEndBarrier);
